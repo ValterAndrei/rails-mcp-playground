@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "rdbg",
+      "name": "Attach Rails Server",
+      "request": "attach",
+      "debugPort": "12345",
+      "localfsMap": "/workspaces/playground:${workspaceFolder}",
+      "internalConsoleOptions": "openOnSessionStart"
+    },
+  ]
+}
