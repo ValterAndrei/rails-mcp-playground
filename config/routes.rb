@@ -7,6 +7,6 @@ Rails.application.routes.draw do
 
   root to: "home#index"
 
-  # Defines the root path route ("/")
-  # root "posts#index"
+  # MCP endpoint
+  post "/mcp", to: "mcp#handle", as: :mcp_handle
 end

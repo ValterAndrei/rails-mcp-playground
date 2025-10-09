@@ -72,6 +72,8 @@ GEM
       securerandom (>= 0.3)
       tzinfo (~> 2.0, >= 2.0.5)
       uri (>= 0.13.1)
+    addressable (2.8.7)
+      public_suffix (>= 2.0.2, < 7.0)
     ast (2.4.3)
     base64 (0.3.0)
     bcrypt_pbkdf (1.1.1)
@@ -109,6 +111,10 @@ GEM
       rdoc (>= 4.0.0)
       reline (>= 0.4.2)
     json (2.15.1)
+    json-schema (6.0.0)
+      addressable (~> 2.8)
+      bigdecimal (~> 3.1)
+    json_rpc_handler (0.1.1)
     kamal (2.7.0)
       activesupport (>= 7.0)
       base64 (~> 0.2)
@@ -132,6 +138,9 @@ GEM
       net-pop
       net-smtp
     marcel (1.1.0)
+    mcp (0.3.0)
+      json-schema (>= 4.1)
+      json_rpc_handler (~> 0.1)
     mini_mime (1.1.5)
     minitest (5.25.5)
     msgpack (1.8.0)
@@ -179,6 +188,7 @@ GEM
     psych (5.2.6)
       date
       stringio
+    public_suffix (6.0.2)
     puma (7.0.4)
       nio4r (~> 2.0)
     raabro (1.4.0)
@@ -318,6 +328,7 @@ DEPENDENCIES
   brakeman
   debug
   kamal
+  mcp
   pg (~> 1.1)
   puma (>= 5.0)
   rails (~> 8.0.3)
