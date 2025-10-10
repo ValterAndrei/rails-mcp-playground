@@ -1,3 +1,5 @@
+// Check in setting.json if "chat.mcp.enabled": true
+
 {
   "servers": {
     "mcp-posts-server": {
