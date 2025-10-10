@@ -7,6 +7,8 @@ Rails.application.routes.draw do
 
   root to: "home#index"
 
+  resources :posts, only: [ :index ]
+
   # MCP endpoint
   post "/mcp", to: "mcp#handle", as: :mcp_handle
 end

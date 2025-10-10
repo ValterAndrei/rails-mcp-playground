@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "mcp-posts-server": {
+      "type": "http",
+      "url": "https://rails-playground-3shv.onrender.com/mcp"
+    }
+  }
+}
