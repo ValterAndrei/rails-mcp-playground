@@ -30,7 +30,7 @@ gem "kamal", require: false
 gem "thruster", require: false
 
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
-# gem "rack-cors"
+gem "rack-cors"
 
 # The official Ruby SDK for the Model Context Protocol
 gem "mcp"
