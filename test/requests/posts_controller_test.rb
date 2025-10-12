@@ -3,9 +3,9 @@ require "test_helper"
 class PostsControllerTest < ActionDispatch::IntegrationTest
   test "should get index and return posts ordered by created_at" do
     # Arrange: Cria posts com datas diferentes
-    post1 = Post.create!(title: "Primeiro Post", description: "Primeiro", created_at: 2.days.ago)
-    post2 = Post.create!(title: "Segundo Post", description: "Segundo", created_at: 1.day.ago)
-    post3 = Post.create!(title: "Terceiro Post", description: "Terceiro", created_at: Time.current)
+    post1 = Post.create!(title: "Primeiro Post", description: "Primeiro desc", created_at: 2.days.ago)
+    post2 = Post.create!(title: "Segundo Post", description: "Segundo desc", created_at: 1.day.ago)
+    post3 = Post.create!(title: "Terceiro Post", description: "Terceiro desc", created_at: Time.current)
 
     # Act: Faz a requisição
     get posts_path

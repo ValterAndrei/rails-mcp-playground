@@ -100,7 +100,7 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
   end
 
   test "should apply offset for pagination" do
-    5.times.map { |i| Post.create!(title: "Post #{i}", description: "Desc #{i}") }
+    5.times.map { |i| Post.create!(title: "Post #{i} 123", description: "Desc #{i} teste") }
 
     response = Posts::IndexTool.call(offset: 2, limit: 2, server_context: {})
 
@@ -124,7 +124,7 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
   end
 
   test "should use default limit of 20" do
-    25.times { |i| Post.create!(title: "Post #{i}", description: "Desc #{i}") }
+    25.times { |i| Post.create!(title: "Post #{i} 123", description: "Desc #{i} teste") }
 
     response = Posts::IndexTool.call(server_context: {})
 
@@ -151,7 +151,7 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
   end
 
   test "should handle search_term with special characters" do
-    Post.create!(title: "C++ Programming", description: "Learn C++")
+    Post.create!(title: "C++ Programming", description: "Desc Learn C++")
 
     response = Posts::IndexTool.call(search_term: "C++", server_context: {})
 
@@ -162,8 +162,8 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
   # Testes de Ordenação
 
   test "should sort by created_at ascending" do
-    Post.create!(title: "Old Post", description: "Old", created_at: 2.days.ago)
-    Post.create!(title: "New Post", description: "New", created_at: 1.day.ago)
+    Post.create!(title: "Old Post", description: "Desc Post Old", created_at: 2.days.ago)
+    Post.create!(title: "New Post", description: "Desc Post New", created_at: 1.day.ago)
 
     response = Posts::IndexTool.call(sort_by: "created_at", sort_order: "asc", server_context: {})
 
@@ -175,8 +175,8 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
   end
 
   test "should sort by created_at descending" do
-    Post.create!(title: "Old Post", description: "Old", created_at: 2.days.ago)
-    Post.create!(title: "New Post", description: "New", created_at: 1.day.ago)
+    Post.create!(title: "Old Post", description: "Desc Post Old", created_at: 2.days.ago)
+    Post.create!(title: "New Post", description: "Desc Post New", created_at: 1.day.ago)
 
     response = Posts::IndexTool.call(sort_by: "created_at", sort_order: "desc", server_context: {})
 
@@ -188,8 +188,8 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
   end
 
   test "should sort by updated_at ascending" do
-    Post.create!(title: "First", description: "Desc", updated_at: 2.days.ago)
-    Post.create!(title: "Second", description: "Desc", updated_at: 1.day.ago)
+    Post.create!(title: "First Post", description: "Desc Post 123", updated_at: 2.days.ago)
+    Post.create!(title: "Second Post", description: "Desc Post 123", updated_at: 1.day.ago)
 
     response = Posts::IndexTool.call(sort_by: "updated_at", sort_order: "asc", server_context: {})
 
@@ -201,8 +201,8 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
   end
 
   test "should sort by updated_at descending" do
-    Post.create!(title: "First", description: "Desc", updated_at: 2.days.ago)
-    Post.create!(title: "Second", description: "Desc", updated_at: 1.day.ago)
+    Post.create!(title: "First", description: "Desc first", updated_at: 2.days.ago)
+    Post.create!(title: "Second", description: "Desc second", updated_at: 1.day.ago)
 
     response = Posts::IndexTool.call(sort_by: "updated_at", sort_order: "desc", server_context: {})
 
@@ -246,9 +246,9 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
   end
 
   test "should handle case-insensitive title sorting" do
-    Post.create!(title: "zebra", description: "Lowercase")
-    Post.create!(title: "Apple", description: "Capitalized")
-    Post.create!(title: "MONKEY", description: "Uppercase")
+    Post.create!(title: "zebra", description: "Lowercase 132")
+    Post.create!(title: "Apple", description: "Capitalized 123")
+    Post.create!(title: "MONKEY", description: "Uppercase 123")
 
     response = Posts::IndexTool.call(sort_by: "title", sort_order: "asc", server_context: {})
 
@@ -262,8 +262,8 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
   end
 
   test "should use default sort_by when not specified" do
-    Post.create!(title: "Old", description: "Desc", created_at: 2.days.ago)
-    Post.create!(title: "New", description: "Desc", created_at: 1.day.ago)
+    Post.create!(title: "Old", description: "Desc 12345", created_at: 2.days.ago)
+    Post.create!(title: "New", description: "Desc 12345", created_at: 1.day.ago)
 
     response = Posts::IndexTool.call(server_context: {})
 
@@ -275,8 +275,8 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
   end
 
   test "should use default sort_order when not specified" do
-    Post.create!(title: "First", description: "Desc", created_at: 2.days.ago)
-    Post.create!(title: "Second", description: "Desc", created_at: 1.day.ago)
+    Post.create!(title: "First", description: "Desc 12345", created_at: 2.days.ago)
+    Post.create!(title: "Second", description: "Desc 12345", created_at: 1.day.ago)
 
     response = Posts::IndexTool.call(sort_by: "created_at", server_context: {})
 
@@ -333,9 +333,9 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
 
   test "should handle sorting with identical timestamps" do
     timestamp = 1.day.ago
-    Post.create!(title: "Post A", description: "Desc A", created_at: timestamp)
-    Post.create!(title: "Post B", description: "Desc B", created_at: timestamp)
-    Post.create!(title: "Post C", description: "Desc C", created_at: timestamp)
+    Post.create!(title: "Post A", description: "Desc A 123", created_at: timestamp)
+    Post.create!(title: "Post B", description: "Desc B 123", created_at: timestamp)
+    Post.create!(title: "Post C", description: "Desc C 123", created_at: timestamp)
 
     response = Posts::IndexTool.call(sort_by: "created_at", sort_order: "desc", server_context: {})
 
