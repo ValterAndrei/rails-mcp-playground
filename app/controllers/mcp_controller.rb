@@ -26,11 +26,11 @@ class McpController < ApplicationController
       version: "1.0.0",
       instructions: INSTRUCTIONS,
       tools: [
-        ListPostsTool,
-        ShowPostTool,
-        CreatePostTool,
-        UpdatePostTool,
-        DeletePostTool
+        Posts::IndexTool,
+        Posts::ShowTool,
+        Posts::CreateTool,
+        Posts::UpdateTool,
+        Posts::DeleteTool
       ],
     )
 

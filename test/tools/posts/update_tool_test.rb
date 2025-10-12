@@ -1,10 +1,10 @@
 require "test_helper"
 
-class UpdatePostToolTest < ActiveSupport::TestCase
+class PostsUpdateToolTest < ActiveSupport::TestCase
   test "should update post title" do
     post = Post.create!(title: "Original", description: "Description")
 
-    response = UpdatePostTool.call(
+    response = Posts::UpdateTool.call(
       id: post.id,
       title: "Updated Title",
       server_context: {}
@@ -18,7 +18,7 @@ class UpdatePostToolTest < ActiveSupport::TestCase
   test "should update post description" do
     post = Post.create!(title: "Title", description: "Original")
 
-    response = UpdatePostTool.call(
+    response = Posts::UpdateTool.call(
       id: post.id,
       description: "Updated Description",
       server_context: {}
@@ -32,7 +32,7 @@ class UpdatePostToolTest < ActiveSupport::TestCase
   test "should update both title and description" do
     post = Post.create!(title: "Original Title", description: "Original Description")
 
-    response = UpdatePostTool.call(
+    response = Posts::UpdateTool.call(
       id: post.id,
       title: "New Title",
       description: "New Description",
@@ -47,7 +47,7 @@ class UpdatePostToolTest < ActiveSupport::TestCase
   test "should handle empty update params" do
     post = Post.create!(title: "Title", description: "Description")
 
-    response = UpdatePostTool.call(
+    response = Posts::UpdateTool.call(
       id: post.id,
       server_context: {}
     )
@@ -58,7 +58,7 @@ class UpdatePostToolTest < ActiveSupport::TestCase
   test "should ignore nil values" do
     post = Post.create!(title: "Title", description: "Description")
 
-    response = UpdatePostTool.call(
+    response = Posts::UpdateTool.call(
       id: post.id,
       title: nil,
       description: nil,
@@ -70,7 +70,7 @@ class UpdatePostToolTest < ActiveSupport::TestCase
 
   test "should ignore empty strings" do
     post = Post.create!(title: "Title", description: "Description")
-    response = UpdatePostTool.call(
+    response = Posts::UpdateTool.call(
       id: post.id,
       title: "",
       description: "",
@@ -82,7 +82,7 @@ class UpdatePostToolTest < ActiveSupport::TestCase
   end
 
   test "should handle post not found" do
-    response = UpdatePostTool.call(
+    response = Posts::UpdateTool.call(
       id: 99999,
       title: "New Title",
       server_context: {}
@@ -94,7 +94,7 @@ class UpdatePostToolTest < ActiveSupport::TestCase
   test "should handle validation errors" do
     post = Post.create!(title: "Title", description: "Description")
 
-    response = UpdatePostTool.call(
+    response = Posts::UpdateTool.call(
       id: post.id,
       title: "", # Invalid
       server_context: {}

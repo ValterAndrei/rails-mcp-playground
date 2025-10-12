@@ -1,11 +1,11 @@
 require "test_helper"
 
-class DeletePostToolTest < ActiveSupport::TestCase
+class Posts::DeleteToolTest < ActiveSupport::TestCase
   test "should delete post" do
     post = Post.create!(title: "To Delete", description: "Description")
 
     assert_difference "Post.count", -1 do
-      response = DeletePostTool.call(id: post.id, server_context: {})
+      response = Posts::DeleteTool.call(id: post.id, server_context: {})
 
       assert_includes response.content.first[:text], "deletado com sucesso"
     end
@@ -14,7 +14,7 @@ class DeletePostToolTest < ActiveSupport::TestCase
   test "should include post title in success message" do
     post = Post.create!(title: "Important Post", description: "Description")
 
-    response = DeletePostTool.call(id: post.id, server_context: {})
+    response = Posts::DeleteTool.call(id: post.id, server_context: {})
 
     text = response.content.first[:text]
     assert_includes text, "Important Post"
@@ -23,7 +23,7 @@ class DeletePostToolTest < ActiveSupport::TestCase
 
   test "should handle post not found" do
     assert_no_difference "Post.count" do
-      response = DeletePostTool.call(id: 99999, server_context: {})
+      response = Posts::DeleteTool.call(id: 99999, server_context: {})
 
       assert_includes response.content.first[:text], "não encontrado"
     end

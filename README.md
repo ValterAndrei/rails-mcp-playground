@@ -69,11 +69,11 @@ bin/rails test
            │     Expondo endpoint: /mcp               │
            │------------------------------------------│
            │ Tools:                                   │
-           │  - create_post_tool                      │
-           │  - delete_post_tool                      │
-           │  - list_posts_tool                       │
-           │  - show_post_tool                        │
-           │  - update_post_tool                      │
+           │  - post-create-tool                      │
+           │  - post-delete-tool                      │
+           │  - post-index-tool                       │
+           │  - post-show-tool                        │
+           │  - post-update-tool                      │
            │------------------------------------------│
            │ Usa models e lógica do Rails:            │
            │  Post.create, Post.all, etc.             │

@@ -1,8 +1,8 @@
 require "test_helper"
 
-class ListPostsToolTest < ActiveSupport::TestCase
+class Posts::IndexToolTest < ActiveSupport::TestCase
   test "should return empty list when no posts exist" do
-    response = ListPostsTool.call(server_context: {})
+    response = Posts::IndexTool.call(server_context: {})
 
     assert_instance_of MCP::Tool::Response, response
     assert_equal 1, response.content.length
@@ -14,7 +14,7 @@ class ListPostsToolTest < ActiveSupport::TestCase
     Post.create!(title: "Post 1", description: "Description 1")
     Post.create!(title: "Post 2", description: "Description 2")
 
-    response = ListPostsTool.call(server_context: {})
+    response = Posts::IndexTool.call(server_context: {})
 
     assert_instance_of MCP::Tool::Response, response
     assert_includes response.content.first[:text], "Total de posts: 2"
@@ -26,7 +26,7 @@ class ListPostsToolTest < ActiveSupport::TestCase
     Post.create!(title: "Old Post", description: "Old Description", created_at: 1.day.ago)
     Post.create!(title: "New Post", description: "New Description", created_at: Time.now)
 
-    response = ListPostsTool.call(server_context: {})
+    response = Posts::IndexTool.call(server_context: {})
 
     text = response.content.first[:text]
     new_post_position = text.index("New Post")
@@ -38,7 +38,7 @@ class ListPostsToolTest < ActiveSupport::TestCase
   test "should include post details in response" do
     post = Post.create!(title: "Test Post", description: "Test Description")
 
-    response = ListPostsTool.call(server_context: {})
+    response = Posts::IndexTool.call(server_context: {})
 
     text = response.content.first[:text]
     assert_includes text, post.id.to_s
@@ -50,7 +50,7 @@ class ListPostsToolTest < ActiveSupport::TestCase
     Post.create!(title: "Ruby on Rails", description: "Framework description")
     Post.create!(title: "Python Django", description: "Another framework")
 
-    response = ListPostsTool.call(search_term: "Ruby", server_context: {})
+    response = Posts::IndexTool.call(search_term: "Ruby", server_context: {})
 
     text = response.content.first[:text]
     assert_includes text, "Total de posts: 1"
@@ -62,7 +62,7 @@ class ListPostsToolTest < ActiveSupport::TestCase
     Post.create!(title: "Post 1", description: "About Ruby programming")
     Post.create!(title: "Post 2", description: "About Python programming")
 
-    response = ListPostsTool.call(search_term: "Ruby", server_context: {})
+    response = Posts::IndexTool.call(search_term: "Ruby", server_context: {})
 
     text = response.content.first[:text]
     assert_includes text, "Total de posts: 1"
@@ -73,7 +73,7 @@ class ListPostsToolTest < ActiveSupport::TestCase
   test "should perform case-insensitive search" do
     Post.create!(title: "Ruby Tutorial", description: "Learn Ruby")
 
-    response = ListPostsTool.call(search_term: "ruby", server_context: {})
+    response = Posts::IndexTool.call(search_term: "ruby", server_context: {})
 
     text = response.content.first[:text]
     assert_includes text, "Total de posts: 1"
@@ -84,7 +84,7 @@ class ListPostsToolTest < ActiveSupport::TestCase
     Post.create!(title: "Post 1", description: "Description 1")
     Post.create!(title: "Post 2", description: "Description 2")
 
-    response = ListPostsTool.call(search_term: nil, server_context: {})
+    response = Posts::IndexTool.call(search_term: nil, server_context: {})
 
     text = response.content.first[:text]
     assert_includes text, "Total de posts: 2"
@@ -93,7 +93,7 @@ class ListPostsToolTest < ActiveSupport::TestCase
   test "should limit number of results" do
     5.times { |i| Post.create!(title: "Post #{i}", description: "Description #{i}") }
 
-    response = ListPostsTool.call(limit: 3, server_context: {})
+    response = Posts::IndexTool.call(limit: 3, server_context: {})
 
     text = response.content.first[:text]
     assert_includes text, "Total de posts: 3"
@@ -102,7 +102,7 @@ class ListPostsToolTest < ActiveSupport::TestCase
   test "should apply offset for pagination" do
     5.times.map { |i| Post.create!(title: "Post #{i}", description: "Desc #{i}") }
 
-    response = ListPostsTool.call(offset: 2, limit: 2, server_context: {})
+    response = Posts::IndexTool.call(offset: 2, limit: 2, server_context: {})
 
     text = response.content.first[:text]
     assert_includes text, "Total de posts: 2"
@@ -115,7 +115,7 @@ class ListPostsToolTest < ActiveSupport::TestCase
     Post.create!(title: "Ruby Post 3", description: "Ruby content")
     Post.create!(title: "Python Post", description: "Python content")
 
-    response = ListPostsTool.call(search_term: "Ruby", limit: 2, server_context: {})
+    response = Posts::IndexTool.call(search_term: "Ruby", limit: 2, server_context: {})
 
     text = response.content.first[:text]
     assert_includes text, "Total de posts: 2"
@@ -126,7 +126,7 @@ class ListPostsToolTest < ActiveSupport::TestCase
   test "should use default limit of 20" do
     25.times { |i| Post.create!(title: "Post #{i}", description: "Desc #{i}") }
 
-    response = ListPostsTool.call(server_context: {})
+    response = Posts::IndexTool.call(server_context: {})
 
     text = response.content.first[:text]
     assert_includes text, "Total de posts: 20"
@@ -135,7 +135,7 @@ class ListPostsToolTest < ActiveSupport::TestCase
   test "should use default offset of 0" do
     Post.create!(title: "First Post", description: "Description")
 
-    response = ListPostsTool.call(server_context: {})
+    response = Posts::IndexTool.call(server_context: {})
 
     text = response.content.first[:text]
     assert_includes text, "First Post"
@@ -144,7 +144,7 @@ class ListPostsToolTest < ActiveSupport::TestCase
   test "should handle empty search_term string" do
     Post.create!(title: "Post 1", description: "Description 1")
 
-    response = ListPostsTool.call(search_term: "", server_context: {})
+    response = Posts::IndexTool.call(search_term: "", server_context: {})
 
     text = response.content.first[:text]
     assert_includes text, "Total de posts: 1"
@@ -153,7 +153,7 @@ class ListPostsToolTest < ActiveSupport::TestCase
   test "should handle search_term with special characters" do
     Post.create!(title: "C++ Programming", description: "Learn C++")
 
-    response = ListPostsTool.call(search_term: "C++", server_context: {})
+    response = Posts::IndexTool.call(search_term: "C++", server_context: {})
 
     text = response.content.first[:text]
     assert_includes text, "C++ Programming"
@@ -165,7 +165,7 @@ class ListPostsToolTest < ActiveSupport::TestCase
     Post.create!(title: "Old Post", description: "Old", created_at: 2.days.ago)
     Post.create!(title: "New Post", description: "New", created_at: 1.day.ago)
 
-    response = ListPostsTool.call(sort_by: "created_at", sort_order: "asc", server_context: {})
+    response = Posts::IndexTool.call(sort_by: "created_at", sort_order: "asc", server_context: {})
 
     text = response.content.first[:text]
     old_post_position = text.index("Old Post")
@@ -178,7 +178,7 @@ class ListPostsToolTest < ActiveSupport::TestCase
     Post.create!(title: "Old Post", description: "Old", created_at: 2.days.ago)
     Post.create!(title: "New Post", description: "New", created_at: 1.day.ago)
 
-    response = ListPostsTool.call(sort_by: "created_at", sort_order: "desc", server_context: {})
+    response = Posts::IndexTool.call(sort_by: "created_at", sort_order: "desc", server_context: {})
 
     text = response.content.first[:text]
     new_post_position = text.index("New Post")
@@ -191,7 +191,7 @@ class ListPostsToolTest < ActiveSupport::TestCase
     Post.create!(title: "First", description: "Desc", updated_at: 2.days.ago)
     Post.create!(title: "Second", description: "Desc", updated_at: 1.day.ago)
 
-    response = ListPostsTool.call(sort_by: "updated_at", sort_order: "asc", server_context: {})
+    response = Posts::IndexTool.call(sort_by: "updated_at", sort_order: "asc", server_context: {})
 
     text = response.content.first[:text]
     first_position = text.index("First")
@@ -204,7 +204,7 @@ class ListPostsToolTest < ActiveSupport::TestCase
     Post.create!(title: "First", description: "Desc", updated_at: 2.days.ago)
     Post.create!(title: "Second", description: "Desc", updated_at: 1.day.ago)
 
-    response = ListPostsTool.call(sort_by: "updated_at", sort_order: "desc", server_context: {})
+    response = Posts::IndexTool.call(sort_by: "updated_at", sort_order: "desc", server_context: {})
 
     text = response.content.first[:text]
     second_position = text.index("Second")
@@ -218,7 +218,7 @@ class ListPostsToolTest < ActiveSupport::TestCase
     Post.create!(title: "Apple Post", description: "First alphabetically")
     Post.create!(title: "Monkey Post", description: "Middle alphabetically")
 
-    response = ListPostsTool.call(sort_by: "title", sort_order: "asc", server_context: {})
+    response = Posts::IndexTool.call(sort_by: "title", sort_order: "asc", server_context: {})
 
     text = response.content.first[:text]
     apple_position = text.index("Apple Post")
@@ -234,7 +234,7 @@ class ListPostsToolTest < ActiveSupport::TestCase
     Post.create!(title: "Apple Post", description: "First alphabetically")
     Post.create!(title: "Monkey Post", description: "Middle alphabetically")
 
-    response = ListPostsTool.call(sort_by: "title", sort_order: "desc", server_context: {})
+    response = Posts::IndexTool.call(sort_by: "title", sort_order: "desc", server_context: {})
 
     text = response.content.first[:text]
     zebra_position = text.index("Zebra Post")
@@ -250,7 +250,7 @@ class ListPostsToolTest < ActiveSupport::TestCase
     Post.create!(title: "Apple", description: "Capitalized")
     Post.create!(title: "MONKEY", description: "Uppercase")
 
-    response = ListPostsTool.call(sort_by: "title", sort_order: "asc", server_context: {})
+    response = Posts::IndexTool.call(sort_by: "title", sort_order: "asc", server_context: {})
 
     text = response.content.first[:text]
     apple_position = text.index("Apple")
@@ -265,7 +265,7 @@ class ListPostsToolTest < ActiveSupport::TestCase
     Post.create!(title: "Old", description: "Desc", created_at: 2.days.ago)
     Post.create!(title: "New", description: "Desc", created_at: 1.day.ago)
 
-    response = ListPostsTool.call(server_context: {})
+    response = Posts::IndexTool.call(server_context: {})
 
     text = response.content.first[:text]
     new_position = text.index("New")
@@ -278,7 +278,7 @@ class ListPostsToolTest < ActiveSupport::TestCase
     Post.create!(title: "First", description: "Desc", created_at: 2.days.ago)
     Post.create!(title: "Second", description: "Desc", created_at: 1.day.ago)
 
-    response = ListPostsTool.call(sort_by: "created_at", server_context: {})
+    response = Posts::IndexTool.call(sort_by: "created_at", server_context: {})
 
     text = response.content.first[:text]
     second_position = text.index("Second")
@@ -292,7 +292,7 @@ class ListPostsToolTest < ActiveSupport::TestCase
     Post.create!(title: "Ruby Basics", description: "Basic Ruby", created_at: 1.day.ago)
     Post.create!(title: "Python Guide", description: "Python tutorial", created_at: 1.hour.ago)
 
-    response = ListPostsTool.call(
+    response = Posts::IndexTool.call(
       search_term: "Ruby",
       sort_by: "title",
       sort_order: "asc",
@@ -318,7 +318,7 @@ class ListPostsToolTest < ActiveSupport::TestCase
       )
     end
 
-    response = ListPostsTool.call(
+    response = Posts::IndexTool.call(
       sort_by: "created_at",
       sort_order: "asc",
       limit: 2,
@@ -337,7 +337,7 @@ class ListPostsToolTest < ActiveSupport::TestCase
     Post.create!(title: "Post B", description: "Desc B", created_at: timestamp)
     Post.create!(title: "Post C", description: "Desc C", created_at: timestamp)
 
-    response = ListPostsTool.call(sort_by: "created_at", sort_order: "desc", server_context: {})
+    response = Posts::IndexTool.call(sort_by: "created_at", sort_order: "desc", server_context: {})
 
     text = response.content.first[:text]
     assert_includes text, "Total de posts: 3"
@@ -351,7 +351,7 @@ class ListPostsToolTest < ActiveSupport::TestCase
 
     # Dependendo da sua implementação, pode lançar erro ou usar valor padrão
     # Ajuste conforme o comportamento esperado
-    response = ListPostsTool.call(sort_by: "invalid_field", server_context: {})
+    response = Posts::IndexTool.call(sort_by: "invalid_field", server_context: {})
 
     # Se sua implementação valida e usa default:
     assert_instance_of MCP::Tool::Response, response
@@ -362,7 +362,7 @@ class ListPostsToolTest < ActiveSupport::TestCase
   test "should handle invalid sort_order gracefully" do
     Post.create!(title: "Test Post", description: "Description")
 
-    response = ListPostsTool.call(sort_order: "invalid", server_context: {})
+    response = Posts::IndexTool.call(sort_order: "invalid", server_context: {})
 
     assert_instance_of MCP::Tool::Response, response
   end

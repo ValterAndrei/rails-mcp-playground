@@ -1,9 +1,9 @@
 require "test_helper"
 
-class CreatePostToolTest < ActiveSupport::TestCase
+class Posts::CreateToolTest < ActiveSupport::TestCase
   test "should create post with valid attributes" do
     assert_difference "Post.count", 1 do
-      response = CreatePostTool.call(
+      response = Posts::CreateTool.call(
         title: "New Post",
         description: "New Description",
         server_context: {}
@@ -18,7 +18,7 @@ class CreatePostToolTest < ActiveSupport::TestCase
   end
 
   test "should return post id and title on success" do
-    response = CreatePostTool.call(
+    response = Posts::CreateTool.call(
       title: "Test Post",
       description: "Test Description",
       server_context: {}
@@ -33,7 +33,7 @@ class CreatePostToolTest < ActiveSupport::TestCase
 
   test "should not create post without title" do
     assert_no_difference "Post.count" do
-      response = CreatePostTool.call(
+      response = Posts::CreateTool.call(
         title: "",
         description: "Description",
         server_context: {}
@@ -46,7 +46,7 @@ class CreatePostToolTest < ActiveSupport::TestCase
 
   test "should not create post without description" do
     assert_no_difference "Post.count" do
-      response = CreatePostTool.call(
+      response = Posts::CreateTool.call(
         title: "Title",
         description: "",
         server_context: {}

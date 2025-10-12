@@ -42,11 +42,11 @@ class McpControllerTest < ActionDispatch::IntegrationTest
     tools = json_response.dig("result", "tools")
 
     assert_kind_of Array, tools
-    assert tools.any? { |t| t["name"] == "list_posts_tool" }
-    assert tools.any? { |t| t["name"] == "show_post_tool" }
-    assert tools.any? { |t| t["name"] == "create_post_tool" }
-    assert tools.any? { |t| t["name"] == "update_post_tool" }
-    assert tools.any? { |t| t["name"] == "delete_post_tool" }
+    assert tools.any? { |t| t["name"] == "post-index-tool" }
+    assert tools.any? { |t| t["name"] == "post-show-tool" }
+    assert tools.any? { |t| t["name"] == "post-create-tool" }
+    assert tools.any? { |t| t["name"] == "post-update-tool" }
+    assert tools.any? { |t| t["name"] == "post-delete-tool" }
   end
 
   test "should handle list_posts tool call" do
@@ -59,7 +59,7 @@ class McpControllerTest < ActionDispatch::IntegrationTest
       id: 2,
       method: "tools/call",
       params: {
-        name: "list_posts_tool",
+        name: "post-index-tool",
         arguments: {}
       }
     }.to_json
@@ -81,7 +81,7 @@ class McpControllerTest < ActionDispatch::IntegrationTest
       id: 3,
       method: "tools/call",
       params: {
-        name: "create_post_tool",
+        name: "post-create-tool",
         arguments: {
           title: "Test Post",
           description: "Test description"
@@ -111,7 +111,7 @@ class McpControllerTest < ActionDispatch::IntegrationTest
       id: 3,
       method: "tools/call",
       params: {
-        name: "show_post_tool",
+        name: "post-show-tool",
         arguments: {
           id: post_record.id
         }
@@ -135,7 +135,7 @@ class McpControllerTest < ActionDispatch::IntegrationTest
       id: 4,
       method: "tools/call",
       params: {
-        name: "update_post_tool",
+        name: "post-update-tool",
         arguments: {
           id: post_record.id,
           title: "Updated Title"
@@ -160,7 +160,7 @@ class McpControllerTest < ActionDispatch::IntegrationTest
       id: 5,
       method: "tools/call",
       params: {
-        name: "delete_post_tool",
+        name: "post-delete-tool",
         arguments: {
           id: post_record.id
         }
@@ -224,7 +224,7 @@ class McpControllerTest < ActionDispatch::IntegrationTest
       id: 7,
       method: "tools/call",
       params: {
-        name: "create_post_tool",
+        name: "post-create-tool",
         arguments: {
           title: "Only Title"
           # Faltando description
@@ -250,7 +250,7 @@ class McpControllerTest < ActionDispatch::IntegrationTest
       id: 8,
       method: "tools/call",
       params: {
-        name: "update_post_tool",
+        name: "post-update-tool",
         arguments: {
           id: 99999, # ID que não existe
           title: "New Title"
@@ -274,7 +274,7 @@ class McpControllerTest < ActionDispatch::IntegrationTest
       id: 9,
       method: "tools/call",
       params: {
-        name: "delete_post_tool",
+        name: "post-delete-tool",
         arguments: {
           id: 99999 # ID que não existe
         }
