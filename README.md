@@ -1,72 +1,71 @@
 # README
 
-## MCP com Ruby on Rails
+## MCP with Ruby on Rails
 
-Este é um projeto de exemplo que demonstra a implementação do protocolo MCP (Model-Controller-Provider) usando Ruby on Rails. O MCP permite que modelos de linguagem (LLMs) interajam com ferramentas externas através de uma interface JSON-RPC.
+This is an example project that demonstrates the implementation of the MCP (Model-Controller-Provider) protocol using Ruby on Rails. MCP allows language models (LLMs) to interact with external tools through a JSON-RPC interface.
 
 ---
 
-### 🚀 Como rodar o projeto
-- Instalar dependências no seu VScode
+### 🚀 How to run the project
+
+- Install dependencies in your VSCode
   - [Devcontainer](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
 
-- Iniciar o servidor Rails:
+- Start the Rails server:
 ```bash
 bin/rails server -b 0.0.0.0 -p 3000
 ```
 
-- Iniciar o servidor Rails com rdbg (para depuração):
+- Start the Rails server with rdbg (for debugging):
 ```bash
 bundle exec rdbg --open --port 12345 --host 0.0.0.0 --nonstop --command -- \
   bin/rails server -b 0.0.0.0 -p 3000
 ```
 
-- Executar testes:
+- Run tests:
 ```bash
 bin/rails test
 ```
 
 ---
 
-### 🧩 Conceitos básicos MCP
+### 🧩 MCP Basic Concepts
 
-1️⃣ Server (Servidor MCP)
+**1️⃣ Server (MCP Server)**
 
-👉 É quem **oferece ferramentas** (_tools_) que uma IA pode usar.
+👉 It's the one that **provides tools** (_tools_) that an AI can use.
+- It **exposes JSON-RPC endpoints** via `/mcp`.
+- It **describes** its tools in the `tools/list` method.
+- It **executes** a tool when the client requests it via `tools/call`.
 
-- Ele **exponde endpoints JSON-RPC** via `/mcp`.
-- Ele **descreve** suas ferramentas no método `tools/list`.
-- Ele **executa** uma ferramenta quando o cliente pede via `tools/call`.
+**2️⃣ Client (MCP Client)**
 
-2️⃣ Client (Cliente MCP)
+👉 It's the one that **consumes** those tools (_tools_).
+- It can be an **AI** (like ChatGPT, Claude, Llama, etc).
+- Or an **intermediary agent** (e.g., a Python or Ruby script that connects the LLM to your MCP Server).
+- The client performs:
+  - `tools/list` → asks "what tools do you offer?"
+  - `tools/call` → executes a tool with certain parameters
 
-👉 É quem **consome** (_tools_) essas ferramentas.
-
-- Pode ser uma **IA** (como ChatGPT, Claude, Llama, etc).
-- Ou um **agente** intermediário (ex: script em Python ou Ruby que conecta o LLM ao teu MCP Server).
-- O cliente faz:
-  - `tools/list` → pergunta “que ferramentas você oferece?”
-  - `tools/call` → executa uma ferramenta com certos parâmetros
-
-🔶 Diagrama visual
+**🔶 Visual Diagram**
 ```
                    ┌────────────────────────┐
-                   │        Usuário         │
-                   │  "Crie um post..."     │
+                   │         User           │
+                   │  "Create a post..."    │
                    └──────────┬─────────────┘
                               │
                               ▼
                   ┌────────────────────────┐
-                  │      LLM (Cliente)     │
+                  │    LLM (Client)        │
                   │  Ex: ChatGPT / Claude  │
-                  │   ou LLM local (Ollama)│
+                  │  or local LLM (Ollama) │
                   └──────────┬─────────────┘
                              │
                              │ JSON-RPC (tools/list, tools/call)
                              ▼
            ┌──────────────────────────────────────────┐
            │         🚀 Rails App (MCP Server)        │
-           │     Expondo endpoint: /mcp               │
+           │     Exposing endpoint: /mcp              │
            │------------------------------------------│
            │ Tools:                                   │
            │  - post-create-tool                      │
@@ -75,13 +74,13 @@ bin/rails test
            │  - post-show-tool                        │
            │  - post-update-tool                      │
            │------------------------------------------│
-           │ Usa models e lógica do Rails:            │
+           │ Uses Rails models and logic:             │
            │  Post.create, Post.all, etc.             │
            └──────────────────────────────────────────┘
                              │
                              ▼
                ┌──────────────────────────────────┐
-               │    Banco de Dados (PG)           │
+               │    Database (PG)                 │
                │  posts(id, title, description)   │
                └──────────────────────────────────┘
 ```
