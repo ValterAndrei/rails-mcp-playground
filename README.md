@@ -2,7 +2,7 @@
 
 ## MCP with Ruby on Rails
 
-This is an example project that demonstrates the implementation of the MCP (Model-Controller-Provider) protocol using Ruby on Rails. MCP allows language models (LLMs) to interact with external tools through a JSON-RPC interface.
+This is an example project that demonstrates the implementation of the MCP (Model-Context-Protocol) protocol using Ruby on Rails. MCP allows language models (LLMs) to interact with external tools through a JSON-RPC interface.
 
 ---
 
