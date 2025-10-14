@@ -9,7 +9,9 @@ class Posts::CreateToolTest < ActiveSupport::TestCase
         server_context: {}
       )
 
-      assert_includes response.content.first[:text], "Post criado com sucesso"
+      json = JSON.parse(response.content.first[:text])
+      assert json["success"]
+      assert_equal "Post criado com sucesso!", json["message"]
     end
 
     post = Post.last
@@ -17,18 +19,22 @@ class Posts::CreateToolTest < ActiveSupport::TestCase
     assert_equal "This is a valid description with enough characters", post.description
   end
 
-  test "should return post id and title on success" do
+  test "should return post data on success" do
     response = Posts::CreateTool.call(
       title: "Test Post Title",
       description: "Test Description with minimum length",
       server_context: {}
     )
 
-    text = response.content.first[:text]
+    json = JSON.parse(response.content.first[:text])
     post = Post.last
 
-    assert_includes text, "ID: #{post.id}"
-    assert_includes text, "Título: Test Post Title"
+    assert json["success"]
+    assert_equal post.id, json["post"]["id"]
+    assert_equal "Test Post Title", json["post"]["title"]
+    assert_equal "Test Description with minimum length", json["post"]["description"]
+    assert_not_nil json["post"]["created_at"]
+    assert_not_nil json["post"]["updated_at"]
   end
 
   test "should not create post without title" do
@@ -39,8 +45,10 @@ class Posts::CreateToolTest < ActiveSupport::TestCase
         server_context: {}
       )
 
-      assert_includes response.content.first[:text], "Erro ao criar post"
-      assert_includes response.content.first[:text].downcase, "title"
+      json = JSON.parse(response.content.first[:text])
+      assert_not json["success"]
+      assert_includes json["message"], "Erro ao criar post"
+      assert_includes json["message"].downcase, "title"
     end
   end
 
@@ -52,8 +60,10 @@ class Posts::CreateToolTest < ActiveSupport::TestCase
         server_context: {}
       )
 
-      assert_includes response.content.first[:text], "Erro ao criar post"
-      assert_includes response.content.first[:text].downcase, "description"
+      json = JSON.parse(response.content.first[:text])
+      assert_not json["success"]
+      assert_includes json["message"], "Erro ao criar post"
+      assert_includes json["message"].downcase, "description"
     end
   end
 
@@ -65,8 +75,10 @@ class Posts::CreateToolTest < ActiveSupport::TestCase
         server_context: {}
       )
 
-      assert_includes response.content.first[:text], "Erro ao criar post"
-      assert_includes response.content.first[:text].downcase, "title"
+      json = JSON.parse(response.content.first[:text])
+      assert_not json["success"]
+      assert_includes json["message"], "Erro ao criar post"
+      assert_includes json["message"].downcase, "title"
     end
   end
 
@@ -80,8 +92,10 @@ class Posts::CreateToolTest < ActiveSupport::TestCase
         server_context: {}
       )
 
-      assert_includes response.content.first[:text], "Erro ao criar post"
-      assert_includes response.content.first[:text].downcase, "title"
+      json = JSON.parse(response.content.first[:text])
+      assert_not json["success"]
+      assert_includes json["message"], "Erro ao criar post"
+      assert_includes json["message"].downcase, "title"
     end
   end
 
@@ -93,8 +107,10 @@ class Posts::CreateToolTest < ActiveSupport::TestCase
         server_context: {}
       )
 
-      assert_includes response.content.first[:text], "Erro ao criar post"
-      assert_includes response.content.first[:text].downcase, "description"
+      json = JSON.parse(response.content.first[:text])
+      assert_not json["success"]
+      assert_includes json["message"], "Erro ao criar post"
+      assert_includes json["message"].downcase, "description"
     end
   end
 
@@ -108,8 +124,10 @@ class Posts::CreateToolTest < ActiveSupport::TestCase
         server_context: {}
       )
 
-      assert_includes response.content.first[:text], "Erro ao criar post"
-      assert_includes response.content.first[:text].downcase, "description"
+      json = JSON.parse(response.content.first[:text])
+      assert_not json["success"]
+      assert_includes json["message"], "Erro ao criar post"
+      assert_includes json["message"].downcase, "description"
     end
   end
 
@@ -121,7 +139,9 @@ class Posts::CreateToolTest < ActiveSupport::TestCase
         server_context: {}
       )
 
-      assert_includes response.content.first[:text], "Post criado com sucesso"
+      json = JSON.parse(response.content.first[:text])
+      assert json["success"]
+      assert_equal "Post criado com sucesso!", json["message"]
     end
   end
 
@@ -136,7 +156,8 @@ class Posts::CreateToolTest < ActiveSupport::TestCase
         server_context: {}
       )
 
-      assert_includes response.content.first[:text], "Post criado com sucesso"
+      json = JSON.parse(response.content.first[:text])
+      assert json["success"]
     end
 
     post = Post.last
@@ -152,8 +173,10 @@ class Posts::CreateToolTest < ActiveSupport::TestCase
         server_context: {}
       )
 
-      assert_includes response.content.first[:text], "Erro ao criar post"
-      assert_includes response.content.first[:text], "Unexpected error"
+      json = JSON.parse(response.content.first[:text])
+      assert_not json["success"]
+      assert_includes json["message"], "Erro ao criar post"
+      assert_includes json["message"], "Unexpected error"
     end
   end
 
@@ -165,8 +188,10 @@ class Posts::CreateToolTest < ActiveSupport::TestCase
         server_context: {}
       )
 
-      assert_includes response.content.first[:text], "Erro ao criar post"
-      assert_includes response.content.first[:text], "Unexpected error"
+      json = JSON.parse(response.content.first[:text])
+      assert_not json["success"]
+      assert_includes json["message"], "Erro ao criar post"
+      assert_includes json["message"], "Unexpected error"
     end
   end
 
@@ -180,5 +205,19 @@ class Posts::CreateToolTest < ActiveSupport::TestCase
     post = Post.last
     assert_equal "  Valid Title  ", post.title
     assert_equal "  Valid description with enough characters  ", post.description
+  end
+
+  test "should return post with ISO8601 timestamps" do
+    response = Posts::CreateTool.call(
+      title: "Test Post",
+      description: "Test Description with valid length",
+      server_context: {}
+    )
+
+    json = JSON.parse(response.content.first[:text])
+
+    assert json["success"]
+    assert_match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/, json["post"]["created_at"])
+    assert_match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/, json["post"]["updated_at"])
   end
 end

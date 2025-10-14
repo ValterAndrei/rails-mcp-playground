@@ -10,7 +10,9 @@ class Posts::UpdateToolTest < ActiveSupport::TestCase
       server_context: {}
     )
 
-    assert_includes response.content.first[:text], "Post atualizado com sucesso"
+    json = JSON.parse(response.content.first[:text])
+    assert json["success"]
+    assert_equal "Post atualizado com sucesso!", json["message"]
     assert_equal "Updated Title", post.reload.title
     assert_equal "Original Description", post.description
   end
@@ -24,7 +26,9 @@ class Posts::UpdateToolTest < ActiveSupport::TestCase
       server_context: {}
     )
 
-    assert_includes response.content.first[:text], "Post atualizado com sucesso"
+    json = JSON.parse(response.content.first[:text])
+    assert json["success"]
+    assert_equal "Post atualizado com sucesso!", json["message"]
     assert_equal "Original Title", post.reload.title
     assert_equal "Updated Description with enough characters", post.description
   end
@@ -39,9 +43,29 @@ class Posts::UpdateToolTest < ActiveSupport::TestCase
       server_context: {}
     )
 
-    assert_includes response.content.first[:text], "Post atualizado com sucesso"
+    json = JSON.parse(response.content.first[:text])
+    assert json["success"]
+    assert_equal "Post atualizado com sucesso!", json["message"]
     assert_equal "New Title", post.reload.title
     assert_equal "New Description with enough characters", post.description
+  end
+
+  test "should return updated post data" do
+    post = Post.create!(title: "Original Title", description: "Original Description")
+
+    response = Posts::UpdateTool.call(
+      id: post.id,
+      title: "New Title",
+      server_context: {}
+    )
+
+    json = JSON.parse(response.content.first[:text])
+    assert json["success"]
+    assert_equal post.id, json["post"]["id"]
+    assert_equal "New Title", json["post"]["title"]
+    assert_equal "Original Description", json["post"]["description"]
+    assert_not_nil json["post"]["created_at"]
+    assert_not_nil json["post"]["updated_at"]
   end
 
   test "should handle empty update params" do
@@ -52,7 +76,9 @@ class Posts::UpdateToolTest < ActiveSupport::TestCase
       server_context: {}
     )
 
-    assert_includes response.content.first[:text], "Nenhum campo fornecido para atualização"
+    json = JSON.parse(response.content.first[:text])
+    assert_not json["success"]
+    assert_equal "Nenhum campo fornecido para atualização", json["message"]
   end
 
   test "should ignore nil values" do
@@ -65,7 +91,9 @@ class Posts::UpdateToolTest < ActiveSupport::TestCase
       server_context: {}
     )
 
-    assert_includes response.content.first[:text], "Nenhum campo fornecido para atualização"
+    json = JSON.parse(response.content.first[:text])
+    assert_not json["success"]
+    assert_equal "Nenhum campo fornecido para atualização", json["message"]
   end
 
   test "should ignore empty strings" do
@@ -78,7 +106,9 @@ class Posts::UpdateToolTest < ActiveSupport::TestCase
       server_context: {}
     )
 
-    assert_includes response.content.first[:text], "Nenhum campo fornecido para atualização"
+    json = JSON.parse(response.content.first[:text])
+    assert_not json["success"]
+    assert_equal "Nenhum campo fornecido para atualização", json["message"]
   end
 
   test "should handle post not found" do
@@ -88,7 +118,10 @@ class Posts::UpdateToolTest < ActiveSupport::TestCase
       server_context: {}
     )
 
-    assert_includes response.content.first[:text], "não encontrado"
+    json = JSON.parse(response.content.first[:text])
+    assert_not json["success"]
+    assert_includes json["message"], "não encontrado"
+    assert_includes json["message"], "99999"
   end
 
   test "should not update with title too short" do
@@ -100,8 +133,10 @@ class Posts::UpdateToolTest < ActiveSupport::TestCase
       server_context: {}
     )
 
-    assert_includes response.content.first[:text], "Erro ao atualizar post"
-    assert_includes response.content.first[:text].downcase, "title"
+    json = JSON.parse(response.content.first[:text])
+    assert_not json["success"]
+    assert_includes json["message"], "Erro ao atualizar post"
+    assert_includes json["message"].downcase, "title"
     assert_equal "Original Title", post.reload.title
   end
 
@@ -115,8 +150,10 @@ class Posts::UpdateToolTest < ActiveSupport::TestCase
       server_context: {}
     )
 
-    assert_includes response.content.first[:text], "Erro ao atualizar post"
-    assert_includes response.content.first[:text].downcase, "title"
+    json = JSON.parse(response.content.first[:text])
+    assert_not json["success"]
+    assert_includes json["message"], "Erro ao atualizar post"
+    assert_includes json["message"].downcase, "title"
     assert_equal "Original Title", post.reload.title
   end
 
@@ -129,8 +166,10 @@ class Posts::UpdateToolTest < ActiveSupport::TestCase
       server_context: {}
     )
 
-    assert_includes response.content.first[:text], "Erro ao atualizar post"
-    assert_includes response.content.first[:text].downcase, "description"
+    json = JSON.parse(response.content.first[:text])
+    assert_not json["success"]
+    assert_includes json["message"], "Erro ao atualizar post"
+    assert_includes json["message"].downcase, "description"
     assert_equal "Original Description", post.reload.description
   end
 
@@ -144,8 +183,10 @@ class Posts::UpdateToolTest < ActiveSupport::TestCase
       server_context: {}
     )
 
-    assert_includes response.content.first[:text], "Erro ao atualizar post"
-    assert_includes response.content.first[:text].downcase, "description"
+    json = JSON.parse(response.content.first[:text])
+    assert_not json["success"]
+    assert_includes json["message"], "Erro ao atualizar post"
+    assert_includes json["message"].downcase, "description"
     assert_equal "Original Description", post.reload.description
   end
 
@@ -158,7 +199,9 @@ class Posts::UpdateToolTest < ActiveSupport::TestCase
       server_context: {}
     )
 
-    assert_includes response.content.first[:text], "Post atualizado com sucesso"
+    json = JSON.parse(response.content.first[:text])
+    assert json["success"]
+    assert_equal "Post atualizado com sucesso!", json["message"]
     assert_equal "ABC", post.reload.title
   end
 
@@ -172,7 +215,9 @@ class Posts::UpdateToolTest < ActiveSupport::TestCase
       server_context: {}
     )
 
-    assert_includes response.content.first[:text], "Post atualizado com sucesso"
+    json = JSON.parse(response.content.first[:text])
+    assert json["success"]
+    assert_equal "Post atualizado com sucesso!", json["message"]
     assert_equal 255, post.reload.title.length
   end
 
@@ -185,7 +230,9 @@ class Posts::UpdateToolTest < ActiveSupport::TestCase
       server_context: {}
     )
 
-    assert_includes response.content.first[:text], "Post atualizado com sucesso"
+    json = JSON.parse(response.content.first[:text])
+    assert json["success"]
+    assert_equal "Post atualizado com sucesso!", json["message"]
     assert_equal "1234567890", post.reload.description
   end
 
@@ -199,7 +246,9 @@ class Posts::UpdateToolTest < ActiveSupport::TestCase
       server_context: {}
     )
 
-    assert_includes response.content.first[:text], "Post atualizado com sucesso"
+    json = JSON.parse(response.content.first[:text])
+    assert json["success"]
+    assert_equal "Post atualizado com sucesso!", json["message"]
     assert_equal 10000, post.reload.description.length
   end
 
@@ -220,8 +269,10 @@ class Posts::UpdateToolTest < ActiveSupport::TestCase
         server_context: {}
       )
 
-      assert_includes response.content.first[:text], "Erro ao atualizar post"
-      assert_includes response.content.first[:text], "Database connection error"
+      json = JSON.parse(response.content.first[:text])
+      assert_not json["success"]
+      assert_includes json["message"], "Erro ao atualizar post"
+      assert_includes json["message"], "Database connection error"
     end
 
     mock_post.verify
@@ -238,8 +289,10 @@ class Posts::UpdateToolTest < ActiveSupport::TestCase
         server_context: {}
       )
 
-      assert_includes response.content.first[:text], "Erro ao atualizar post"
-      assert_includes response.content.first[:text], "Unexpected error"
+      json = JSON.parse(response.content.first[:text])
+      assert_not json["success"]
+      assert_includes json["message"], "Erro ao atualizar post"
+      assert_includes json["message"], "Unexpected error"
     end
   end
 
@@ -252,7 +305,9 @@ class Posts::UpdateToolTest < ActiveSupport::TestCase
       server_context: {}
     )
 
-    assert_includes response.content.first[:text], "Nenhum campo fornecido para atualização"
+    json = JSON.parse(response.content.first[:text])
+    assert_not json["success"]
+    assert_equal "Nenhum campo fornecido para atualização", json["message"]
     assert_equal "Original Title", post.reload.title
   end
 
@@ -265,8 +320,26 @@ class Posts::UpdateToolTest < ActiveSupport::TestCase
       server_context: {}
     )
 
-    assert_includes response.content.first[:text], "Erro ao atualizar post"
+    json = JSON.parse(response.content.first[:text])
+    assert_not json["success"]
+    assert_includes json["message"], "Erro ao atualizar post"
     assert_equal "Original Title", post.reload.title
     assert_equal "Original Description", post.reload.description
+  end
+
+  test "should return ISO8601 timestamps in updated post" do
+    post = Post.create!(title: "Original Title", description: "Original Description")
+
+    response = Posts::UpdateTool.call(
+      id: post.id,
+      title: "New Title",
+      server_context: {}
+    )
+
+    json = JSON.parse(response.content.first[:text])
+
+    assert json["success"]
+    assert_match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/, json["post"]["created_at"])
+    assert_match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/, json["post"]["updated_at"])
   end
 end

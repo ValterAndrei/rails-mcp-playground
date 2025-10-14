@@ -73,6 +73,15 @@ class McpControllerTest < ActionDispatch::IntegrationTest
 
     assert_equal 2, json_response["id"]
     assert_not_nil json_response["result"]
+
+    # Validar estrutura do retorno da tool
+    content = json_response.dig("result", "content")
+    assert_kind_of Array, content
+
+    tool_result = JSON.parse(content.first["text"])
+    assert tool_result["success"]
+    assert_equal 2, tool_result["total"]
+    assert_equal 2, tool_result["posts"].length
   end
 
   test "should handle create_post tool call" do
@@ -96,6 +105,17 @@ class McpControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :success
+    json_response = JSON.parse(response.body)
+
+    # Validar estrutura do retorno da tool
+    content = json_response.dig("result", "content")
+    tool_result = JSON.parse(content.first["text"])
+
+    assert tool_result["success"]
+    assert_equal "Post criado com sucesso!", tool_result["message"]
+    assert_not_nil tool_result["post"]
+    assert_equal "Test Post", tool_result["post"]["title"]
+    assert_equal "Test description", tool_result["post"]["description"]
 
     # Verificar se o post foi criado corretamente
     created_post = Post.last
@@ -125,6 +145,16 @@ class McpControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     json_response = JSON.parse(response.body)
     assert_not_nil json_response["result"]
+
+    # Validar estrutura do retorno da tool
+    content = json_response.dig("result", "content")
+    tool_result = JSON.parse(content.first["text"])
+
+    assert tool_result["success"]
+    assert_equal "Post encontrado com sucesso!", tool_result["message"]
+    assert_equal post_record.id, tool_result["post"]["id"]
+    assert_equal "Show Test", tool_result["post"]["title"]
+    assert_equal "Show Description", tool_result["post"]["description"]
   end
 
   test "should handle update_post tool call" do
@@ -148,6 +178,17 @@ class McpControllerTest < ActionDispatch::IntegrationTest
       headers: { "Content-Type" => "application/json" }
 
     assert_response :success
+    json_response = JSON.parse(response.body)
+
+    # Validar estrutura do retorno da tool
+    content = json_response.dig("result", "content")
+    tool_result = JSON.parse(content.first["text"])
+
+    assert tool_result["success"]
+    assert_equal "Post atualizado com sucesso!", tool_result["message"]
+    assert_equal "Updated Title", tool_result["post"]["title"]
+    assert_equal "Original Description", tool_result["post"]["description"]
+
     assert_equal "Updated Title", post_record.reload.title
     assert_equal "Original Description", post_record.description # Descrição não deve mudar
   end
@@ -174,6 +215,16 @@ class McpControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :success
+    json_response = JSON.parse(response.body)
+
+    # Validar estrutura do retorno da tool
+    content = json_response.dig("result", "content")
+    tool_result = JSON.parse(content.first["text"])
+
+    assert tool_result["success"]
+    assert_equal "Post deletado com sucesso!", tool_result["message"]
+    assert_equal post_record.id, tool_result["post"]["id"]
+    assert_equal "To Delete", tool_result["post"]["title"]
   end
 
   test "should handle invalid JSON" do
@@ -226,8 +277,8 @@ class McpControllerTest < ActionDispatch::IntegrationTest
       params: {
         name: "post-create-tool",
         arguments: {
-          title: "Only Title"
-          # Faltando description
+          title: "Only Title",
+          description: "" # Descrição faltando
         }
       }
     }.to_json
@@ -240,8 +291,13 @@ class McpControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     json_response = JSON.parse(response.body)
-    # O erro pode estar no result ou no error, dependendo da implementação
-    assert json_response["result"] || json_response["error"]
+
+    # Validar estrutura de erro da tool
+    content = json_response.dig("result", "content")
+    tool_result = JSON.parse(content.first["text"])
+
+    assert_not tool_result["success"]
+    assert_includes tool_result["message"], "Erro ao criar post"
   end
 
   test "should handle post not found on update" do
@@ -264,8 +320,14 @@ class McpControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     json_response = JSON.parse(response.body)
-    # Deve retornar uma mensagem de erro no result
-    assert json_response["result"] || json_response["error"]
+
+    # Validar estrutura de erro da tool
+    content = json_response.dig("result", "content")
+    tool_result = JSON.parse(content.first["text"])
+
+    assert_not tool_result["success"]
+    assert_includes tool_result["message"], "não encontrado"
+    assert_includes tool_result["message"], "99999"
   end
 
   test "should handle post not found on delete" do
@@ -289,7 +351,96 @@ class McpControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     json_response = JSON.parse(response.body)
-    # Deve retornar uma mensagem de erro no result
-    assert json_response["result"] || json_response["error"]
+
+    # Validar estrutura de erro da tool
+    content = json_response.dig("result", "content")
+    tool_result = JSON.parse(content.first["text"])
+
+    assert_not tool_result["success"]
+    assert_includes tool_result["message"], "não encontrado"
+    assert_includes tool_result["message"], "99999"
+  end
+
+  test "should handle post not found on show" do
+    request_body = {
+      jsonrpc: "2.0",
+      id: 10,
+      method: "tools/call",
+      params: {
+        name: "post-show-tool",
+        arguments: {
+          id: 99999
+        }
+      }
+    }.to_json
+
+    post mcp_handle_path,
+      params: request_body,
+      headers: { "Content-Type" => "application/json" }
+
+    assert_response :success
+    json_response = JSON.parse(response.body)
+
+    # Validar estrutura de erro da tool
+    content = json_response.dig("result", "content")
+    tool_result = JSON.parse(content.first["text"])
+
+    assert_not tool_result["success"]
+    assert_includes tool_result["message"], "não encontrado"
+  end
+
+  test "should return consistent JSON structure across all tools" do
+    post_record = Post.create!(title: "Consistency Test", description: "Test Description")
+
+    # Testar CreateTool
+    create_request = {
+      jsonrpc: "2.0",
+      id: 1,
+      method: "tools/call",
+      params: {
+        name: "post-create-tool",
+        arguments: { title: "New Post", description: "New Description" }
+      }
+    }.to_json
+
+    post mcp_handle_path, params: create_request, headers: { "Content-Type" => "application/json" }
+    create_result = JSON.parse(JSON.parse(response.body).dig("result", "content").first["text"])
+
+    assert create_result.key?("success")
+    assert create_result.key?("message")
+
+    # Testar ShowTool
+    show_request = {
+      jsonrpc: "2.0",
+      id: 2,
+      method: "tools/call",
+      params: {
+        name: "post-show-tool",
+        arguments: { id: post_record.id }
+      }
+    }.to_json
+
+    post mcp_handle_path, params: show_request, headers: { "Content-Type" => "application/json" }
+    show_result = JSON.parse(JSON.parse(response.body).dig("result", "content").first["text"])
+
+    assert show_result.key?("success")
+    assert show_result.key?("message")
+
+    # Testar IndexTool
+    index_request = {
+      jsonrpc: "2.0",
+      id: 3,
+      method: "tools/call",
+      params: {
+        name: "post-index-tool",
+        arguments: {}
+      }
+    }.to_json
+
+    post mcp_handle_path, params: index_request, headers: { "Content-Type" => "application/json" }
+    index_result = JSON.parse(JSON.parse(response.body).dig("result", "content").first["text"])
+
+    assert index_result.key?("success")
+    assert index_result.key?("message")
   end
 end

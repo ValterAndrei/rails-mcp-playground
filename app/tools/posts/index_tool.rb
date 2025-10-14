@@ -5,7 +5,7 @@ module Posts
 
     input_schema(
       properties: {
-        search_term:  {
+        search_term: {
           type: "string",
           description: "Termo de busca para filtrar postagens (busca em título e descrição)"
         },
@@ -37,6 +37,37 @@ module Posts
       }
     )
 
+    output_schema(
+      properties: {
+        success: {
+          type: "boolean",
+          description: "Se a operação foi bem-sucedida"
+        },
+        posts: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              id: { type: "integer" },
+              title: { type: "string" },
+              description: { type: "string" },
+              created_at: { type: "string", format: "date-time" },
+              updated_at: { type: "string", format: "date-time" }
+            }
+          }
+        },
+        total: {
+          type: "integer",
+          description: "Total de posts retornados"
+        },
+        message: {
+          type: "string",
+          description: "Mensagem de retorno"
+        }
+      },
+      required: [ "success", "posts", "total", "message" ]
+    )
+
     def self.call(search_term: nil, limit: 20, offset: 0, sort_by: "created_at", sort_order: "desc", server_context:)
       posts = Post.where(
         "title ILIKE :search OR description ILIKE :search",
@@ -45,22 +76,31 @@ module Posts
 
       posts_data = posts.map do |post|
         {
-          id:          post.id,
-          title:       post.title,
+          id: post.id,
+          title: post.title,
           description: post.description,
-          created_at:  post.created_at.iso8601,
-          updated_at:  post.updated_at.iso8601
+          created_at: post.created_at.iso8601,
+          updated_at: post.updated_at.iso8601
         }
       end
 
+      result = {
+        success: true,
+        posts: posts_data,
+        total: posts.count,
+        message: "Posts listados com sucesso!"
+      }
+
+      output_schema.validate_result(result)
+
       MCP::Tool::Response.new([ {
         type: "text",
-        text: "Total de posts: #{posts.count}\n\n#{posts_data.to_json}"
+        text: result.to_json
       } ])
     rescue StandardError => e
       MCP::Tool::Response.new([ {
         type: "text",
-        text: "Erro ao listar posts: #{e.message}"
+        text: { success: false, posts: [], total: 0, message: "Erro ao listar posts: #{e.message}" }.to_json
       } ])
     end
   end

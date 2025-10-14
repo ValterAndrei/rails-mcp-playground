@@ -21,6 +21,30 @@ module Posts
       required: [ "id" ]
     )
 
+    output_schema(
+      properties: {
+        success: {
+          type: "boolean",
+          description: "Se a operação foi bem-sucedida"
+        },
+        post: {
+          type: "object",
+          properties: {
+            id: { type: "integer" },
+            title: { type: "string" },
+            description: { type: "string" },
+            created_at: { type: "string", format: "date-time" },
+            updated_at: { type: "string", format: "date-time" }
+          }
+        },
+        message: {
+          type: "string",
+          description: "Mensagem de retorno"
+        }
+      },
+      required: [ "success", "message" ]
+    )
+
     def self.call(id:, title: nil, description: nil, server_context:)
       post = Post.find(id)
 
@@ -31,30 +55,44 @@ module Posts
       if update_params.empty?
         return MCP::Tool::Response.new([ {
           type: "text",
-          text: "Nenhum campo fornecido para atualização"
+          text: { success: false, message: "Nenhum campo fornecido para atualização" }.to_json
         } ])
       end
 
       if post.update(update_params)
+        result = {
+          success: true,
+          post: {
+            id: post.id,
+            title: post.title,
+            description: post.description,
+            created_at: post.created_at.iso8601,
+            updated_at: post.updated_at.iso8601
+          },
+          message: "Post atualizado com sucesso!"
+        }
+
+        output_schema.validate_result(result)
+
         MCP::Tool::Response.new([ {
           type: "text",
-          text: "Post atualizado com sucesso! ID: #{post.id}, Título: #{post.title}"
+          text: result.to_json
         } ])
       else
         MCP::Tool::Response.new([ {
           type: "text",
-          text: "Erro ao atualizar post: #{post.errors.full_messages.join(', ')}"
+          text: { success: false, message: "Erro ao atualizar post: #{post.errors.full_messages.join(', ')}" }.to_json
         } ])
       end
     rescue ActiveRecord::RecordNotFound
       MCP::Tool::Response.new([ {
         type: "text",
-        text: "Post com ID #{id} não encontrado"
+        text: { success: false, message: "Post com ID #{id} não encontrado" }.to_json
       } ])
     rescue StandardError => e
       MCP::Tool::Response.new([ {
         type: "text",
-        text: "Erro ao atualizar post: #{e.message}"
+        text: { success: false, message: "Erro ao atualizar post: #{e.message}" }.to_json
       } ])
     end
   end

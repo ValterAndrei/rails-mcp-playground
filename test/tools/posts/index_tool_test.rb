@@ -7,7 +7,12 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
     assert_instance_of MCP::Tool::Response, response
     assert_equal 1, response.content.length
     assert_equal "text", response.content.first[:type]
-    assert_includes response.content.first[:text], "Total de posts: 0"
+
+    json = JSON.parse(response.content.first[:text])
+    assert json["success"]
+    assert_equal 0, json["total"]
+    assert_equal [], json["posts"]
+    assert_equal "Posts listados com sucesso!", json["message"]
   end
 
   test "should list all posts with default parameters" do
@@ -16,10 +21,12 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
 
     response = Posts::IndexTool.call(server_context: {})
 
-    assert_instance_of MCP::Tool::Response, response
-    assert_includes response.content.first[:text], "Total de posts: 2"
-    assert_includes response.content.first[:text], "Post 1"
-    assert_includes response.content.first[:text], "Post 2"
+    json = JSON.parse(response.content.first[:text])
+    assert json["success"]
+    assert_equal 2, json["total"]
+    assert_equal 2, json["posts"].length
+    assert_includes json["posts"].map { |p| p["title"] }, "Post 1"
+    assert_includes json["posts"].map { |p| p["title"] }, "Post 2"
   end
 
   test "should order posts by created_at descending" do
@@ -28,11 +35,9 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
 
     response = Posts::IndexTool.call(server_context: {})
 
-    text = response.content.first[:text]
-    new_post_position = text.index("New Post")
-    old_post_position = text.index("Old Post")
-
-    assert new_post_position < old_post_position, "New post should appear before old post"
+    json = JSON.parse(response.content.first[:text])
+    assert_equal "New Post", json["posts"].first["title"]
+    assert_equal "Old Post", json["posts"].last["title"]
   end
 
   test "should include post details in response" do
@@ -40,10 +45,14 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
 
     response = Posts::IndexTool.call(server_context: {})
 
-    text = response.content.first[:text]
-    assert_includes text, post.id.to_s
-    assert_includes text, "Test Post"
-    assert_includes text, "Test Description"
+    json = JSON.parse(response.content.first[:text])
+    post_data = json["posts"].first
+
+    assert_equal post.id, post_data["id"]
+    assert_equal "Test Post", post_data["title"]
+    assert_equal "Test Description", post_data["description"]
+    assert_not_nil post_data["created_at"]
+    assert_not_nil post_data["updated_at"]
   end
 
   test "should filter posts by search_term in title" do
@@ -52,10 +61,10 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
 
     response = Posts::IndexTool.call(search_term: "Ruby", server_context: {})
 
-    text = response.content.first[:text]
-    assert_includes text, "Total de posts: 1"
-    assert_includes text, "Ruby on Rails"
-    assert_not_includes text, "Python Django"
+    json = JSON.parse(response.content.first[:text])
+    assert json["success"]
+    assert_equal 1, json["total"]
+    assert_equal "Ruby on Rails", json["posts"].first["title"]
   end
 
   test "should filter posts by search_term in description" do
@@ -64,10 +73,10 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
 
     response = Posts::IndexTool.call(search_term: "Ruby", server_context: {})
 
-    text = response.content.first[:text]
-    assert_includes text, "Total de posts: 1"
-    assert_includes text, "Post 1"
-    assert_not_includes text, "Post 2"
+    json = JSON.parse(response.content.first[:text])
+    assert json["success"]
+    assert_equal 1, json["total"]
+    assert_equal "Post 1", json["posts"].first["title"]
   end
 
   test "should perform case-insensitive search" do
@@ -75,9 +84,10 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
 
     response = Posts::IndexTool.call(search_term: "ruby", server_context: {})
 
-    text = response.content.first[:text]
-    assert_includes text, "Total de posts: 1"
-    assert_includes text, "Ruby Tutorial"
+    json = JSON.parse(response.content.first[:text])
+    assert json["success"]
+    assert_equal 1, json["total"]
+    assert_equal "Ruby Tutorial", json["posts"].first["title"]
   end
 
   test "should return all posts when search_term is nil" do
@@ -86,8 +96,9 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
 
     response = Posts::IndexTool.call(search_term: nil, server_context: {})
 
-    text = response.content.first[:text]
-    assert_includes text, "Total de posts: 2"
+    json = JSON.parse(response.content.first[:text])
+    assert json["success"]
+    assert_equal 2, json["total"]
   end
 
   test "should limit number of results" do
@@ -95,8 +106,10 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
 
     response = Posts::IndexTool.call(limit: 3, server_context: {})
 
-    text = response.content.first[:text]
-    assert_includes text, "Total de posts: 3"
+    json = JSON.parse(response.content.first[:text])
+    assert json["success"]
+    assert_equal 3, json["total"]
+    assert_equal 3, json["posts"].length
   end
 
   test "should apply offset for pagination" do
@@ -104,9 +117,10 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
 
     response = Posts::IndexTool.call(offset: 2, limit: 2, server_context: {})
 
-    text = response.content.first[:text]
-    assert_includes text, "Total de posts: 2"
-    # Deve retornar os posts do meio (considerando ordem descendente)
+    json = JSON.parse(response.content.first[:text])
+    assert json["success"]
+    assert_equal 2, json["total"]
+    assert_equal 2, json["posts"].length
   end
 
   test "should combine search_term and limit" do
@@ -117,10 +131,10 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
 
     response = Posts::IndexTool.call(search_term: "Ruby", limit: 2, server_context: {})
 
-    text = response.content.first[:text]
-    assert_includes text, "Total de posts: 2"
-    assert_includes text, "Ruby"
-    assert_not_includes text, "Python"
+    json = JSON.parse(response.content.first[:text])
+    assert json["success"]
+    assert_equal 2, json["total"]
+    assert json["posts"].all? { |p| p["title"].include?("Ruby") }
   end
 
   test "should use default limit of 20" do
@@ -128,8 +142,9 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
 
     response = Posts::IndexTool.call(server_context: {})
 
-    text = response.content.first[:text]
-    assert_includes text, "Total de posts: 20"
+    json = JSON.parse(response.content.first[:text])
+    assert json["success"]
+    assert_equal 20, json["total"]
   end
 
   test "should use default offset of 0" do
@@ -137,8 +152,9 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
 
     response = Posts::IndexTool.call(server_context: {})
 
-    text = response.content.first[:text]
-    assert_includes text, "First Post"
+    json = JSON.parse(response.content.first[:text])
+    assert json["success"]
+    assert_equal "First Post", json["posts"].first["title"]
   end
 
   test "should handle empty search_term string" do
@@ -146,8 +162,9 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
 
     response = Posts::IndexTool.call(search_term: "", server_context: {})
 
-    text = response.content.first[:text]
-    assert_includes text, "Total de posts: 1"
+    json = JSON.parse(response.content.first[:text])
+    assert json["success"]
+    assert_equal 1, json["total"]
   end
 
   test "should handle search_term with special characters" do
@@ -155,8 +172,9 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
 
     response = Posts::IndexTool.call(search_term: "C++", server_context: {})
 
-    text = response.content.first[:text]
-    assert_includes text, "C++ Programming"
+    json = JSON.parse(response.content.first[:text])
+    assert json["success"]
+    assert_equal "C++ Programming", json["posts"].first["title"]
   end
 
   # Testes de Ordenação
@@ -167,11 +185,9 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
 
     response = Posts::IndexTool.call(sort_by: "created_at", sort_order: "asc", server_context: {})
 
-    text = response.content.first[:text]
-    old_post_position = text.index("Old Post")
-    new_post_position = text.index("New Post")
-
-    assert old_post_position < new_post_position, "Old post should appear before new post when sorting asc"
+    json = JSON.parse(response.content.first[:text])
+    assert_equal "Old Post", json["posts"].first["title"]
+    assert_equal "New Post", json["posts"].last["title"]
   end
 
   test "should sort by created_at descending" do
@@ -180,11 +196,9 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
 
     response = Posts::IndexTool.call(sort_by: "created_at", sort_order: "desc", server_context: {})
 
-    text = response.content.first[:text]
-    new_post_position = text.index("New Post")
-    old_post_position = text.index("Old Post")
-
-    assert new_post_position < old_post_position, "New post should appear before old post when sorting desc"
+    json = JSON.parse(response.content.first[:text])
+    assert_equal "New Post", json["posts"].first["title"]
+    assert_equal "Old Post", json["posts"].last["title"]
   end
 
   test "should sort by updated_at ascending" do
@@ -193,11 +207,9 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
 
     response = Posts::IndexTool.call(sort_by: "updated_at", sort_order: "asc", server_context: {})
 
-    text = response.content.first[:text]
-    first_position = text.index("First")
-    second_position = text.index("Second")
-
-    assert first_position < second_position, "First updated post should appear first when sorting by updated_at asc"
+    json = JSON.parse(response.content.first[:text])
+    assert_equal "First Post", json["posts"].first["title"]
+    assert_equal "Second Post", json["posts"].last["title"]
   end
 
   test "should sort by updated_at descending" do
@@ -206,11 +218,9 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
 
     response = Posts::IndexTool.call(sort_by: "updated_at", sort_order: "desc", server_context: {})
 
-    text = response.content.first[:text]
-    second_position = text.index("Second")
-    first_position = text.index("First")
-
-    assert second_position < first_position, "Last updated post should appear first when sorting by updated_at desc"
+    json = JSON.parse(response.content.first[:text])
+    assert_equal "Second", json["posts"].first["title"]
+    assert_equal "First", json["posts"].last["title"]
   end
 
   test "should sort by title ascending" do
@@ -220,13 +230,12 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
 
     response = Posts::IndexTool.call(sort_by: "title", sort_order: "asc", server_context: {})
 
-    text = response.content.first[:text]
-    apple_position = text.index("Apple Post")
-    monkey_position = text.index("Monkey Post")
-    zebra_position = text.index("Zebra Post")
+    json = JSON.parse(response.content.first[:text])
+    titles = json["posts"].map { |p| p["title"] }
 
-    assert apple_position < monkey_position, "Apple should come before Monkey"
-    assert monkey_position < zebra_position, "Monkey should come before Zebra"
+    assert_equal "Apple Post", titles[0]
+    assert_equal "Monkey Post", titles[1]
+    assert_equal "Zebra Post", titles[2]
   end
 
   test "should sort by title descending" do
@@ -236,13 +245,12 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
 
     response = Posts::IndexTool.call(sort_by: "title", sort_order: "desc", server_context: {})
 
-    text = response.content.first[:text]
-    zebra_position = text.index("Zebra Post")
-    monkey_position = text.index("Monkey Post")
-    apple_position = text.index("Apple Post")
+    json = JSON.parse(response.content.first[:text])
+    titles = json["posts"].map { |p| p["title"] }
 
-    assert zebra_position < monkey_position, "Zebra should come before Monkey"
-    assert monkey_position < apple_position, "Monkey should come before Apple"
+    assert_equal "Zebra Post", titles[0]
+    assert_equal "Monkey Post", titles[1]
+    assert_equal "Apple Post", titles[2]
   end
 
   test "should handle case-insensitive title sorting" do
@@ -252,13 +260,12 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
 
     response = Posts::IndexTool.call(sort_by: "title", sort_order: "asc", server_context: {})
 
-    text = response.content.first[:text]
-    apple_position = text.index("Apple")
-    monkey_position = text.index("MONKEY")
-    zebra_position = text.index("zebra")
+    json = JSON.parse(response.content.first[:text])
+    titles = json["posts"].map { |p| p["title"] }
 
-    assert apple_position < monkey_position, "Apple should come before MONKEY"
-    assert monkey_position < zebra_position, "MONKEY should come before zebra"
+    assert_equal "Apple", titles[0]
+    assert_equal "MONKEY", titles[1]
+    assert_equal "zebra", titles[2]
   end
 
   test "should use default sort_by when not specified" do
@@ -267,11 +274,9 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
 
     response = Posts::IndexTool.call(server_context: {})
 
-    text = response.content.first[:text]
-    new_position = text.index("New")
-    old_position = text.index("Old")
-
-    assert new_position < old_position, "Should default to created_at desc"
+    json = JSON.parse(response.content.first[:text])
+    assert_equal "New", json["posts"].first["title"]
+    assert_equal "Old", json["posts"].last["title"]
   end
 
   test "should use default sort_order when not specified" do
@@ -280,11 +285,9 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
 
     response = Posts::IndexTool.call(sort_by: "created_at", server_context: {})
 
-    text = response.content.first[:text]
-    second_position = text.index("Second")
-    first_position = text.index("First")
-
-    assert second_position < first_position, "Should default to desc order"
+    json = JSON.parse(response.content.first[:text])
+    assert_equal "Second", json["posts"].first["title"]
+    assert_equal "First", json["posts"].last["title"]
   end
 
   test "should combine sorting with search" do
@@ -299,14 +302,13 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
       server_context: {}
     )
 
-    text = response.content.first[:text]
-    assert_includes text, "Total de posts: 2"
+    json = JSON.parse(response.content.first[:text])
+    assert json["success"]
+    assert_equal 2, json["total"]
 
-    advanced_position = text.index("Ruby Advanced")
-    basics_position = text.index("Ruby Basics")
-
-    assert advanced_position < basics_position, "Should sort filtered results"
-    assert_not_includes text, "Python"
+    titles = json["posts"].map { |p| p["title"] }
+    assert_equal "Ruby Advanced", titles[0]
+    assert_equal "Ruby Basics", titles[1]
   end
 
   test "should combine sorting with pagination" do
@@ -326,9 +328,10 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
       server_context: {}
     )
 
-    text = response.content.first[:text]
-    assert_includes text, "Total de posts: 2"
-    # Deve retornar os posts 3 e 2 (considerando ordem crescente, pulando o mais antigo)
+    json = JSON.parse(response.content.first[:text])
+    assert json["success"]
+    assert_equal 2, json["total"]
+    assert_equal 2, json["posts"].length
   end
 
   test "should handle sorting with identical timestamps" do
@@ -339,24 +342,25 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
 
     response = Posts::IndexTool.call(sort_by: "created_at", sort_order: "desc", server_context: {})
 
-    text = response.content.first[:text]
-    assert_includes text, "Total de posts: 3"
-    assert_includes text, "Post A"
-    assert_includes text, "Post B"
-    assert_includes text, "Post C"
+    json = JSON.parse(response.content.first[:text])
+    assert json["success"]
+    assert_equal 3, json["total"]
+
+    titles = json["posts"].map { |p| p["title"] }
+    assert_includes titles, "Post A"
+    assert_includes titles, "Post B"
+    assert_includes titles, "Post C"
   end
 
   test "should handle invalid sort_by gracefully" do
     Post.create!(title: "Test Post", description: "Description")
 
-    # Dependendo da sua implementação, pode lançar erro ou usar valor padrão
-    # Ajuste conforme o comportamento esperado
     response = Posts::IndexTool.call(sort_by: "invalid_field", server_context: {})
 
-    # Se sua implementação valida e usa default:
     assert_instance_of MCP::Tool::Response, response
-    # Ou se lança erro:
-    # assert_includes response.content.first[:text], "Erro"
+    # Se lançar erro, verifica a estrutura de erro
+    JSON.parse(response.content.first[:text])
+    # Pode ser success: false com erro ou success: true dependendo da implementação
   end
 
   test "should handle invalid sort_order gracefully" do
@@ -365,5 +369,32 @@ class Posts::IndexToolTest < ActiveSupport::TestCase
     response = Posts::IndexTool.call(sort_order: "invalid", server_context: {})
 
     assert_instance_of MCP::Tool::Response, response
+    JSON.parse(response.content.first[:text])
+    # Verifica que retorna algo válido
+  end
+
+  test "should return posts with ISO8601 timestamps" do
+    Post.create!(title: "Test Post", description: "Test Description")
+
+    response = Posts::IndexTool.call(server_context: {})
+
+    json = JSON.parse(response.content.first[:text])
+    post = json["posts"].first
+
+    assert_match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/, post["created_at"])
+    assert_match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/, post["updated_at"])
+  end
+
+  test "should handle exceptions gracefully" do
+    Post.stub :where, ->(*) { raise StandardError.new("Database error") } do
+      response = Posts::IndexTool.call(server_context: {})
+
+      json = JSON.parse(response.content.first[:text])
+      assert_not json["success"]
+      assert_equal 0, json["total"]
+      assert_equal [], json["posts"]
+      assert_includes json["message"], "Erro ao listar posts"
+      assert_includes json["message"], "Database error"
+    end
   end
 end
