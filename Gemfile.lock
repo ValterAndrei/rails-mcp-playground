@@ -138,7 +138,7 @@ GEM
       net-pop
       net-smtp
     marcel (1.1.0)
-    mcp (0.3.0)
+    mcp (0.4.0)
       json-schema (>= 4.1)
       json_rpc_handler (~> 0.1)
     mini_mime (1.1.5)
