@@ -7,11 +7,15 @@ module Posts
       properties: {
         title: {
           type: "string",
-          description: "Título da postagem (obrigatório)"
+          description: "Título da postagem (obrigatório)",
+          minLength: 3,
+          maxLength: 255
         },
         description: {
           type: "string",
-          description: "Descrição/conteúdo da postagem (obrigatório)"
+          description: "Descrição/conteúdo da postagem (obrigatório)",
+          minLength: 10,
+          maxLength: 10000
         }
       },
       required: [ "title", "description" ]

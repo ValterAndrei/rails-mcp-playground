@@ -293,11 +293,11 @@ class McpControllerTest < ActionDispatch::IntegrationTest
     json_response = JSON.parse(response.body)
 
     # Validar estrutura de erro da tool
-    content = json_response.dig("result", "content")
-    tool_result = JSON.parse(content.first["text"])
-
-    assert_not tool_result["success"]
-    assert_includes tool_result["message"], "Erro ao criar post"
+    content = json_response.dig("error", "data")
+    assert_match(
+      /Invalid arguments: The property '#\/description' was not of a minimum string length of 10 in schema/i,
+      content
+    )
   end
 
   test "should handle post not found on update" do
