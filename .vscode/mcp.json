@@ -2,7 +2,11 @@
   "servers": {
     "rails-app-mcp": {
       "type": "http",
-      "url": "http://localhost:3000/mcp"
+      "url": "http://localhost:3000/mcp",
+      // "headers": {
+      //   // "Basic #{Base64.strict_encode64("mcp_username:mcp_password")}"
+      //   "Authorization": "Basic bWNwX3VzZXJuYW1lOm1jcF9wYXNzd29yZA=="
+      // }
     }
   }
 }

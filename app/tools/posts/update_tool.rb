@@ -11,11 +11,15 @@ module Posts
         },
         title: {
           type: "string",
-          description: "Novo título da postagem (opcional)"
+          description: "Novo título da postagem (opcional)",
+          minLength: 3,
+          maxLength: 255
         },
         description: {
           type: "string",
-          description: "Nova descrição da postagem (opcional)"
+          description: "Nova descrição da postagem (opcional)",
+          minLength: 10,
+          maxLength: 10000
         }
       },
       required: [ "id" ]
