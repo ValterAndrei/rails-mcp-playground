@@ -47,7 +47,7 @@ class McpController < ApplicationController
 
   def authenticate!
     authenticate_or_request_with_http_basic do |username, password|
-      username == "mcp_username" && password == "mcp_password"
+      username == ENV["MCP_USERNAME"] && password == ENV["MCP_PASSWORD"]
     end
   end
 end

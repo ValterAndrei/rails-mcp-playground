@@ -14,7 +14,9 @@
 
   "containerEnv": {
     "KAMAL_REGISTRY_PASSWORD": "$KAMAL_REGISTRY_PASSWORD",
-    "DB_HOST": "postgres"
+    "DB_HOST": "postgres",
+    "MCP_PASSWORD": "mcp_password",
+    "MCP_USERNAME": "mcp_username"
   },
 
   // Configure tool-specific properties.

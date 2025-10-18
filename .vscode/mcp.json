@@ -4,7 +4,7 @@
       "type": "http",
       "url": "http://localhost:3000/mcp",
       // "headers": {
-      //   // "Basic #{Base64.strict_encode64("mcp_username:mcp_password")}"
+      //   // "Basic #{Base64.strict_encode64("#{ENV["MCP_USERNAME"]}:#{ENV["MCP_PASSWORD"]}")}"
       //   "Authorization": "Basic bWNwX3VzZXJuYW1lOm1jcF9wYXNzd29yZA=="
       // }
     }
