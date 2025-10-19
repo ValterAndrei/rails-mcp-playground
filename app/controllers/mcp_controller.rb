@@ -1,9 +1,4 @@
 class McpController < ApplicationController
-  # Add authenticate_or_request_with_http_basic
-  include ActionController::HttpAuthentication::Basic::ControllerMethods
-
-  # before_action :authenticate!
-
   INSTRUCTIONS = <<~INSTRUCTIONS
     Você é um assistente especializado em gerenciamento de postagens de blog.
 
@@ -40,14 +35,5 @@ class McpController < ApplicationController
     )
 
     render json: server.handle_json(request.body.read)
-  end
-
-
-  private
-
-  def authenticate!
-    authenticate_or_request_with_http_basic do |username, password|
-      username == ENV["MCP_USERNAME"] && password == ENV["MCP_PASSWORD"]
-    end
   end
 end

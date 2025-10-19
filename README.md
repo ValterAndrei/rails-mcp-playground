@@ -84,3 +84,10 @@ bin/rails test
                │  posts(id, title, description)   │
                └──────────────────────────────────┘
 ```
+
+---
+
+### 📚 Additional Resources
+
+- Read the full documentation at [MCP Official Docs](https://modelcontextprotocol.io/docs/getting-started/intro).
+- Extending [GitHub Copilot](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent/extend-coding-agent-with-mcp) coding agent with the Model Context Protocol (MCP)
