@@ -3,6 +3,10 @@
     "rails-app-mcp": {
       "type": "http",
       "url": "http://localhost:3000/mcp"
+    },
+    "rails-app-mcp-prod": {
+      "type": "http",
+      "url": "https://rails-playground-3shv.onrender.com/mcp"
     }
   }
 }
